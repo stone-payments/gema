@@ -13,6 +13,7 @@ from flask import request
 # 2- Ter 2 usuarios e senhas:
 #    2.1- Usuario dev, que so sera usado para checar se o pipeline solicitado existe
 #    2.2- Usuario do tsuru, com privilegios de adm no gocd
+# Checar se o ambiente selecionado existe!
 
 app = Flask(__name__)
 
@@ -33,14 +34,20 @@ def list():
     gocd = "https://cd.stone.com.br:8154/go/api/admin/environments/" + env
     context = ssl._create_unverified_context()
     response = urllib2.Request(gocd, headers=request_headers)
+######## COLOCAR try PRA LIDAR COM 404 !
     contents = urllib2.urlopen(response, context=context).read()
     parsed_json = json.loads(contents)
 
-    pipes = ""
+    retstr = ""
+    contem = 0
     for usr_pipe in parsed_json["pipelines"]:
-        pipes = pipes + "\n" + usr_pipe["name"]
-        # CHECAR SE O PIPELINE EXISTE NESSE AMBIENTE
-    return 'contents: {} \n'.format(pipes)
+        if pipe == usr_pipe["name"]:
+            contem = 1
+    if contem == 1:
+        retstr = retstr + 'Pipeline \'' + pipe + '\' is already in environment \'' + env + '\'!\n'
+    else:
+        retstr = retstr + 'Pipeline \'' + pipe + '\' is NOT in environment \'' + env + '\'!\n'
+    return '{}'.format(retstr)
 
 # Update environments of pipeline
 @app.route('/update')
