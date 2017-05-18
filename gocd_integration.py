@@ -56,9 +56,13 @@ def list():
 def add():
     usrname = os.environ['USR']
     usrpass = os.environ['PAS']
-
+    restrictedenvs = os.environ['RESTENVS']
     pipe = request.args.get('pipeline')
     env = request.args.get('env')
+
+    if env in restrictedenvs:
+        return 'Sorry! The '+env+' environment is restricted!\nPipeline NOT added to it!\nPlease ask the QaaS team for help.\n'
+
     auth = usrname + ":" + usrpass
 
     http = httplib2.Http(disable_ssl_certificate_validation=True)
@@ -89,8 +93,12 @@ def add():
 def remove():
     usrname = os.environ['USR']
     usrpass = os.environ['PAS']
+    restrictedenvs = os.environ['RESTENVS']
     pipe = request.args.get('pipeline')
     env = request.args.get('env')
+
+    if env in restrictedenvs:
+        return 'Sorry! The '+env+' environment is restricted!\nPipeline NOT added to it!\nPlease ask the QaaS team for help.\n'
 
     auth = usrname + ":" + usrpass
 
