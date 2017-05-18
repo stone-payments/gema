@@ -1,4 +1,6 @@
+import urllib
 import urllib2
+import httplib2
 import base64
 import ssl
 import json
@@ -50,11 +52,49 @@ def list():
     return '{}'.format(retstr)
 
 # Update environments of pipeline
-@app.route('/update')
+@app.route('/add')
 def add():
+    usrname = os.environ['USR']
+    usrpass = os.environ['PAS']
+
+    pipe = request.args.get('pipeline')
+    env = request.args.get('env')
+    auth = usrname + ":" + usrpass
+
+    http = httplib2.Http(disable_ssl_certificate_validation=True)
+    gocd = "https://cd.stone.com.br:8154/go/api/admin/environments/" + env
+    request_headers = {
+        "Accept": "Accept: application/vnd.go.cd.v1+json",
+        "Content-Type": "application/json",
+        "Authorization": "Basic " + base64.encodestring(auth).replace('\n', '')
+    }
+    data = "{\"pipelines\":{\"add\":[\"" + pipe + "\"]}}"
+
+######## COLOCAR try PRA LIDAR COM 404! - Caso o pipeline já esteja no environment
+    resp, contents = http.request(gocd, "PATCH", data, headers=request_headers)
+    parsed_json = json.loads(contents)
+
+    retstr = ""
+    contem = 0
+    for usr_pipe in parsed_json["pipelines"]:
+        if pipe == usr_pipe["name"]:
+            contem = 1
+    if contem == 1:
+        retstr = retstr + 'Pipeline \'' + pipe + '\' added successfully to environment \'' + env + '\'!\n'
+    else:
+        retstr = retstr + 'Failed to add pipeline \'' + pipe + '\' to environment \'' + env + '\'!\n'
+    return '{}'.format(retstr)
+
+
+"""
+@app.route('/remove')
+def remove():
+    usrname = os.environ['USR']
+    usrpass = os.environ['PAS']
     pipe = request.args.get('pipeline')
     env = request.args.get('env')
     return 'pipeline: {} | env: {}\n'.format(pipe, env)
+"""
 
 if __name__ == '__main__':
     app.run()
