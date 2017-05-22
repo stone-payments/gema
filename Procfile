@@ -1,1 +1,1 @@
-web: python gocd_integration.py
+web: python gocd-environment-manager.py
