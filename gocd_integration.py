@@ -1,5 +1,3 @@
-import urllib
-import urllib2
 import httplib2
 import base64
 import ssl
@@ -9,9 +7,7 @@ from flask import Flask
 from flask import request
 
 # Fazer:
-#ok - Ajustar permissao de git push e usar sistema de issues do github
 #- Checar se o pipeline solicitado existe naquele ambiente
-#- Ler de uma variavel de ambiente os ambientes 'restritos'
 #- Checar se o ambiente selecionado existe!
 
 app = Flask(__name__)
@@ -32,28 +28,25 @@ request_headers = {
 # List environments of pipeline
 @app.route('/list')
 def list():
-    pipeline = request.args.get('pipeline') 
+    pipeline = request.args.get('pipeline')
     env = request.args.get('env')
-    auth = gemuser + ":" + gempass
 
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
 
-    request_headers = {
+    request_headers_list = {
         "Accept": "Accept: application/vnd.go.cd.v1+json",
         "Authorization": "Basic " + base64.encodestring(auth).replace('\n', '')
     }
 
-    ssl_context = ssl._create_unverified_context()
-    response = urllib2.Request(gocd_url, headers=request_headers)
 ######## COLOCAR try PRA LIDAR COM 404 !
-    content = urllib2.urlopen(response, context=ssl_context).read()
+    resp, content = http.request(gocd_url, headers=request_headers_list)
     parsed_json = json.loads(content)
 
     returnstring = ""
-    contains = false
+    contains = False
     for usr_pipe in parsed_json["pipelines"]:
         if pipeline == usr_pipe["name"]:
-            contains = true
+            contains = True
     if contains:
         returnstring = returnstring + 'Pipeline \'' + pipeline + '\' is already in environment \'' + env + '\'!\n'
     else:
@@ -79,10 +72,10 @@ def add():
     parsed_json = json.loads(content)
 
     returnstring = ""
-    contains = false
+    contains = False
     for usr_pipe in parsed_json["pipelines"]:
         if pipeline == usr_pipe["name"]:
-            contains = true
+            contains = True
     if contains:
         returnstring = 'Pipeline \'' + pipeline + '\' added successfully to environment \'' + env + '\'!\n'
     else:
@@ -107,10 +100,10 @@ def remove():
     parsed_json = json.loads(content)
 
     returnstring = ""
-    contains = false
+    contains = False
     for usr_pipe in parsed_json["pipelines"]:
         if pipeline == usr_pipe["name"]:
-            contains = true
+            contains = True
     if contains:
         returnstring = 'Pipeline \'' + pipeline + '\' removed successfully from environment \'' + env + '\'!\n'
     else:
