@@ -48,7 +48,7 @@ def list():
         if pipeline == usr_pipe["name"]:
             contains = True
     if contains:
-        returnstring = returnstring + 'Pipeline \'' + pipeline + '\' is already in environment \'' + env + '\'!\n'
+        returnstring = returnstring + 'Pipeline \'' + pipeline + '\' is in environment \'' + env + '\'!\n'
     else:
         returnstring = returnstring + 'Pipeline \'' + pipeline + '\' is NOT in environment \'' + env + '\'!\n'
     return '{}'.format(returnstring)
@@ -100,10 +100,10 @@ def remove():
     parsed_json = json.loads(content)
 
     returnstring = ""
-    contains = False
+    contains = True
     for usr_pipe in parsed_json["pipelines"]:
         if pipeline == usr_pipe["name"]:
-            contains = True
+            contains = False
     if contains:
         returnstring = 'Pipeline \'' + pipeline + '\' removed successfully from environment \'' + env + '\'!\n'
     else:
