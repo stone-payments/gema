@@ -6,10 +6,6 @@ import os
 from flask import Flask
 from flask import request
 
-# Fazer:
-#- Checar se o pipeline solicitado existe naquele ambiente
-#- Checar se o ambiente selecionado existe!
-
 app = Flask(__name__)
 
 gemuser = os.environ['GEM_USER']
