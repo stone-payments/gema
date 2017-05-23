@@ -73,7 +73,10 @@ def add():
         if "Failed to update environment" in parsed_json["message"]:
             return 'Pipeline \'' + pipeline + '\' is already in environment \'' + env +'\'!\n'
         else:
-            return 'Environment \'' + env + '\' not found!\n'
+            if "with name" in  parsed_json["message"]:
+                return 'Pipeline \'' + pipeline + '\' not found!\n'
+            else:
+                return 'Environment \'' + env + '\' not found!\n'
 
     returnstring = ""
     contains = False
