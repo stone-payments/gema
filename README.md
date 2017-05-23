@@ -2,7 +2,7 @@
 App to manage environments of pipelines in gocd from the command line.
 
 # Quickstart
-This app uses a curl command tool to interact with the GoCD API in order to manage the environment's pipelines.
+This app uses a curl command tool to interact with the GEMA, which internally interacts with the GoCD API in order to manage the environment's pipelines.
 
 Please download the appropriate version for your system. Windows users should download 'gema.ps1' and linux users should download 'gema.sh'.
 (If you're a linux user, don't forget to chmod +x gema.sh)

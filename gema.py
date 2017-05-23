@@ -3,8 +3,8 @@ import base64
 import ssl
 import json
 import os
-from flask import Flask
-from flask import request
+from flask import Flask, request
+
 
 app = Flask(__name__)
 
@@ -34,12 +34,15 @@ def list():
         "Authorization": "Basic " + base64.encodestring(auth).replace('\n', '')
     }
 
-######## COLOCAR try PRA LIDAR COM 404 !
     resp, content = http.request(gocd_url, headers=request_headers_list)
     parsed_json = json.loads(content)
+    
+    if "message" in parsed_json:
+        return 'Environment \'' + env + '\' not found!\n'
 
     returnstring = ""
     contains = False
+
     for usr_pipe in parsed_json["pipelines"]:
         if pipeline == usr_pipe["name"]:
             contains = True
@@ -63,9 +66,14 @@ def add():
 
     data = "{\"pipelines\":{\"add\":[\"" + pipeline + "\"]}}"
 
-######## COLOCAR try PRA LIDAR COM 404! - Caso o pipeline ja esteja no environment
     resp, content = http.request(gocd_url, "PATCH", data, headers=request_headers)
     parsed_json = json.loads(content)
+
+    if "message" in parsed_json:
+        if "Failed to update environment" in parsed_json["message"]:
+            return 'Pipeline \'' + pipeline + '\' is already in environment \'' + env +'\'!\n'
+        else:
+            return 'Environment \'' + env + '\' not found!\n'
 
     returnstring = ""
     contains = False
@@ -94,6 +102,9 @@ def remove():
 ######## COLOCAR try PRA LIDAR COM 404! - Caso o pipeline NAO esteja no environment
     resp, content = http.request(gocd_url, "PATCH", data, headers=request_headers)
     parsed_json = json.loads(content)
+
+    if "message" in parsed_json:
+        return 'Environment \'' + env + '\' not found!\n'
 
     returnstring = ""
     contains = True
