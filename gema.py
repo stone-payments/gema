@@ -8,8 +8,8 @@ from flask import request
 
 app = Flask(__name__)
 
-gemuser = os.environ['GEM_USER']
-gempass = os.environ['GEM_PASS']
+gemuser = os.environ['GEMA_USER']
+gempass = os.environ['GEMA_PASS']
 restrictedenvs = os.environ['RESTRICTED_ENVS']
 restrictedenvsarray = restrictedenvs.split(",")
 auth = gemuser + ":" + gempass

@@ -1,10 +1,13 @@
-# gocd-env-management
+# GEMA - GoCD Environment Manager Application
 App to manage environments of pipelines in gocd from the command line.
 
 # Quickstart
-This app is intended to be used with curl, where you will type a curl in your command prompt and the app will interact with the GoCD API in order to manage the environment's pipelines.
+This app uses a curl command tool to interact with the GoCD API in order to manage the environment's pipelines.
 
-This app implements just 3 simple commands to manage the GoCD's pipelines environments:
+Please download the appropriate version for your system. Windows users should download 'gema.ps1' and linux users should download 'gema.sh'.
+(If you're a linux user, don't forget to chmod +x gema.sh)
+
+The app implements just 3 simple commands to manage the GoCD's pipelines environments:
 
 - list
 - add
@@ -12,17 +15,17 @@ This app implements just 3 simple commands to manage the GoCD's pipelines enviro
 
 In order to check if a pipeline 'PIPELINE' is in the environment 'ENV', type this in your command prompt:
 ```
- 	# curl "APP_URL/list?env=ENV&pipeline=PIPELINE"
+ 	# ./gema.sh list ENV PIPELINE
 ```
 
-In order to addd a pipeline 'PIPELINE' to the environment 'ENV', type this in your command prompt:
+In order to add a pipeline 'PIPELINE' to the environment 'ENV', type this in your command prompt:
 ```
-	# curl "APP_URL/add?env=ENV&pipeline=PIPELINE"
+ 	# ./gema.sh add ENV PIPELINE
 ```
 
 In order to remove a pipeline 'PIPELINE' from the environment 'ENV', type this in your command prompt:
 ```
-	# curl "APP_URL/remove?env=ENV&pipeline=PIPELINE"
+ 	# ./gema.sh remove ENV PIPELINE
 ```
 
 # Installation
@@ -31,10 +34,10 @@ In order to run this app, first you will need to define these environment URLs:
 GOCD_URL
 	- The complete URL of the GoCD server, including the port. Ex: "https://gocd.io:8154"
 
-GEM_USER:
+GEMA_USER:
 	- The username who is going to interact with the GoCD API. This user must have permission to manage the GoCD environments.
 
-GEM_PASS:
+GEMA_PASS:
 	- The password of the GoCD user.
 
 RESTRICTED_ENVS:
@@ -42,7 +45,7 @@ RESTRICTED_ENVS:
 
 When these environment URLs have been defined, just start the app with:
 ```
-	# python gocd_integration.py
+	# python gema.py
 ```
 This will start the app, opening the port 8888 for the users to connect to, acording to the #quickstart.
 
