@@ -97,12 +97,12 @@ def remove():
 
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
 
-    for restrictedenvitem in restrictedenvsarray:
-        if env == restrictedenvitem:
-            return 'Sorry! The '+env+' environment is restricted!\nPipeline NOT removed from it!\nPlease ask the QaaS team for help.\n'
+# For now we CAN remove pipelines from the production env, but can't add pipelines to it.
+#    for restrictedenvitem in restrictedenvsarray:
+#        if env == restrictedenvitem:
+#            return 'Sorry! The '+env+' environment is restricted!\nPipeline NOT removed from it!\nPlease ask the QaaS team for help.\n'
 
     data = "{\"pipelines\":{\"remove\":[\"" + pipeline + "\"]}}"
-######## COLOCAR try PRA LIDAR COM 404! - Caso o pipeline NAO esteja no environment
     resp, content = http.request(gocd_url, "PATCH", data, headers=request_headers)
     parsed_json = json.loads(content)
 
