@@ -118,7 +118,7 @@ def remove():
         if pipeline == usr_pipe["name"]:
             contains = False
     if contains:
-        returnstring = 'Pipeline \'' + pipeline + '\' removed successfully from environment \'' + env + '\'!\n'
+        returnstring = 'Pipeline \'' + pipeline + '\' removed successfully from environment \'' + env + '\'!\n(Or it wasn\'t there before)\n'
     else:
         returnstring = 'Failed to remove pipeline \'' + pipeline + '\' from environment \'' + env + '\'!\n'
 
