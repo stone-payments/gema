@@ -1,1 +1,1 @@
-web: python gema.py
+web: python gema-server.py
