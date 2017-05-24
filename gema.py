@@ -71,7 +71,10 @@ def add():
 
     if "message" in parsed_json:
         if "Failed to update environment" in parsed_json["message"]:
-            return 'Pipeline \'' + pipeline + '\' is already in environment \'' + env +'\'!\n'
+            if "Duplicate unique value" in parsed_json["message"]:
+                return 'Pipeline \'' + pipeline + '\' is already in another environment!\n'
+            else:
+                return 'Pipeline \'' + pipeline + '\' is already in environment \'' + env +'\'!\n'
         else:
             if "with name" in  parsed_json["message"]:
                 return 'Pipeline \'' + pipeline + '\' not found!\n'
