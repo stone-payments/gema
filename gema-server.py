@@ -61,7 +61,7 @@ def add():
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
 
     for restrictedenvitem in restrictedenvsarray:
-        if env == restrictedenvitem:
+        if env.capitalize() == restrictedenvitem.capitalize():
             return 'Sorry! The '+env+' environment is restricted!\nPipeline NOT added to it!\nPlease ask the QaaS team for help.\n'
 
     data = "{\"pipelines\":{\"add\":[\"" + pipeline + "\"]}}"
