@@ -14,7 +14,7 @@ ACTION=$1
 ENVIRONMENT=$2
 PIPELINE=$3
 
-APP_URL="https://gema.paas.dmz-1.dc1.buy4.io"
+APP_URL="https://gema.stone.com.br"
 
 if [ $# -eq 3 ]; then
     curl "$APP_URL/$ACTION?env=$ENVIRONMENT&pipeline=$PIPELINE"

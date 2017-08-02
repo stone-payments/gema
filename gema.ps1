@@ -4,7 +4,7 @@
     [Parameter(Mandatory=$true)][string]$pipeline
  )
 
-$App_Url="https://gema.paas.dmz-1.dc1.buy4.io"
+$App_Url="https://gema.stone.com.br"
 
 [System.Net.ServicePointManager]::SecurityProtocol = @("Tls12","Tls11","Tls","Ssl3")
 (Invoke-WebRequest -Uri "$App_Url/$($task)?env=$environment&pipeline=$pipeline").Content
