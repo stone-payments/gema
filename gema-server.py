@@ -5,7 +5,6 @@ import json
 import os
 from flask import Flask, request
 
-
 app = Flask(__name__)
 
 gemuser = os.environ['GEMA_USER']
@@ -16,10 +15,24 @@ auth = gemuser + ":" + gempass
 
 http = httplib2.Http(disable_ssl_certificate_validation=True)
 request_headers = {
-    "Accept": "Accept: application/vnd.go.cd.v1+json",
+    "Accept": "Accept: application/vnd.go.cd.v2+json",
     "Content-Type": "application/json",
     "Authorization": "Basic " + base64.encodestring(auth).replace('\n', '')
 }
+
+def envExists (env):
+
+    gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments"
+    resp, content = http.request(gocd_url, headers=request_headers)
+    parsed_json = json.loads(content)
+
+    contains = False
+
+    for usr_env in parsed_json["_embedded"]["environments"]:
+        if env == usr_env["name"]:
+            contains = True
+
+    return contains
 
 # List environments of pipeline
 @app.route('/list')
@@ -27,18 +40,12 @@ def list():
     pipeline = request.args.get('pipeline')
     env = request.args.get('env')
 
+    if not envExists(env):
+        return 'Environment \'' + env + '\' NOT found!\n'
+
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
-
-    request_headers_list = {
-        "Accept": "Accept: application/vnd.go.cd.v1+json",
-        "Authorization": "Basic " + base64.encodestring(auth).replace('\n', '')
-    }
-
-    resp, content = http.request(gocd_url, headers=request_headers_list)
+    resp, content = http.request(gocd_url, headers=request_headers)
     parsed_json = json.loads(content)
-    
-    if "message" in parsed_json:
-        return 'Environment \'' + env + '\' not found!\n'
 
     returnstring = ""
     contains = False
