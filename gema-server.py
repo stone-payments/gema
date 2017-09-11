@@ -27,7 +27,6 @@ def envExists (env):
     parsed_json = json.loads(content)
 
     contains = False
-
     for usr_env in parsed_json["_embedded"]["environments"]:
         if env == usr_env["name"]:
             contains = True
@@ -59,17 +58,43 @@ def list():
         returnstring = returnstring + 'Pipeline \'' + pipeline + '\' is NOT in environment \'' + env + '\'!\n'
     return '{}'.format(returnstring)
 
+def pipeExists (pipeline):
+
+    request_headers_pipe = {
+        "Accept": "Accept: application/vnd.go.cd.v4+json",
+        "Content-Type": "application/json",
+        "Authorization": "Basic " + base64.encodestring(auth).replace('\n', '')
+    }
+
+    gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/pipelines/" + pipeline
+    resp, content = http.request(gocd_url, headers=request_headers_pipe)
+    parsed_json = json.loads(content)
+
+    if "message" in parsed_json:
+        return False
+
+    if pipeline == parsed_json["name"]:
+        return True
+
+    return False
+
 # Update environments of pipeline
 @app.route('/add')
 def add():
     pipeline = request.args.get('pipeline')
     env = request.args.get('env')
 
-    gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
+    if not envExists(env):
+        return 'Environment \'' + env + '\' NOT found!\n'
+
+    if not pipeExists(pipeline):
+        return 'Pipeline \'' + pipeline + '\' NOT found!\n'
 
     for restrictedenvitem in restrictedenvsarray:
         if env.capitalize() == restrictedenvitem.capitalize():
             return 'Sorry! The '+env+' environment is restricted!\nPipeline NOT added to it!\nPlease ask the QaaS team for help.\n'
+
+    gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
 
     data = "{\"pipelines\":{\"add\":[\"" + pipeline + "\"]}}"
 
@@ -82,11 +107,6 @@ def add():
                 return 'Pipeline \'' + pipeline + '\' is already in another environment!\n'
             else:
                 return 'Pipeline \'' + pipeline + '\' is already in environment \'' + env +'\'!\n'
-        else:
-            if "with name" in  parsed_json["message"]:
-                return 'Pipeline \'' + pipeline + '\' not found!\n'
-            else:
-                return 'Environment \'' + env + '\' not found!\n'
 
     returnstring = ""
     contains = False
@@ -104,6 +124,9 @@ def add():
 def remove():
     pipeline = request.args.get('pipeline')
     env = request.args.get('env')
+
+    if not envExists(env):
+        return 'Environment \'' + env + '\' NOT found!\n'
 
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
 
