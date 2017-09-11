@@ -20,6 +20,10 @@ request_headers = {
     "Authorization": "Basic " + base64.encodestring(auth).replace('\n', '')
 }
 
+@app.route('/')
+def wrongRoute():
+    return "GEMA\n"
+
 def envExists (env):
 
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments"
@@ -33,33 +37,8 @@ def envExists (env):
 
     return contains
 
-# List environments of pipeline
-@app.route('/list')
-def list():
-    pipeline = request.args.get('pipeline')
-    env = request.args.get('env')
-
-    if not envExists(env):
-        return 'Environment \'' + env + '\' NOT found!\n'
-
-    gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
-    resp, content = http.request(gocd_url, headers=request_headers)
-    parsed_json = json.loads(content)
-
-    returnstring = ""
-    contains = False
-
-    for usr_pipe in parsed_json["pipelines"]:
-        if pipeline == usr_pipe["name"]:
-            contains = True
-    if contains:
-        returnstring = returnstring + 'Pipeline \'' + pipeline + '\' is in environment \'' + env + '\'!\n'
-    else:
-        returnstring = returnstring + 'Pipeline \'' + pipeline + '\' is NOT in environment \'' + env + '\'!\n'
-    return '{}'.format(returnstring)
-
 def pipeExists (pipeline):
-
+    
     request_headers_pipe = {
         "Accept": "Accept: application/vnd.go.cd.v4+json",
         "Content-Type": "application/json",
@@ -77,6 +56,34 @@ def pipeExists (pipeline):
         return True
 
     return False
+
+# List environments of pipeline
+@app.route('/list')
+def list():
+    pipeline = request.args.get('pipeline')
+    env = request.args.get('env')
+
+    if not envExists(env):
+        return 'Environment \'' + env + '\' NOT found!\n'
+
+    if not pipeExists(pipeline):
+        return 'Pipeline \'' + pipeline + '\' NOT found!\n'
+
+    gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
+    resp, content = http.request(gocd_url, headers=request_headers)
+    parsed_json = json.loads(content)
+
+    returnstring = ""
+    contains = False
+
+    for usr_pipe in parsed_json["pipelines"]:
+        if pipeline == usr_pipe["name"]:
+            contains = True
+    if contains:
+        returnstring = returnstring + 'Pipeline \'' + pipeline + '\' is in environment \'' + env + '\'!\n'
+    else:
+        returnstring = returnstring + 'Pipeline \'' + pipeline + '\' is NOT in environment \'' + env + '\'!\n'
+    return '{}'.format(returnstring)
 
 # Update environments of pipeline
 @app.route('/add')
@@ -128,19 +135,17 @@ def remove():
     if not envExists(env):
         return 'Environment \'' + env + '\' NOT found!\n'
 
-    gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
+    if not pipeExists(pipeline):
+        return 'Pipeline \'' + pipeline + '\' NOT found!\n'
 
-# For now we CAN remove pipelines from the production env, but can't add pipelines to it.
-#    for restrictedenvitem in restrictedenvsarray:
-#        if env == restrictedenvitem:
-#            return 'Sorry! The '+env+' environment is restricted!\nPipeline NOT removed from it!\nPlease ask the QaaS team for help.\n'
+    gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
 
     data = "{\"pipelines\":{\"remove\":[\"" + pipeline + "\"]}}"
     resp, content = http.request(gocd_url, "PATCH", data, headers=request_headers)
     parsed_json = json.loads(content)
 
     if "message" in parsed_json:
-        return 'Environment \'' + env + '\' not found!\n'
+        return "There is no pipeline '" + pipeline + "' in the '" + env + "' environment.\n"
 
     returnstring = ""
     contains = True
@@ -148,7 +153,7 @@ def remove():
         if pipeline == usr_pipe["name"]:
             contains = False
     if contains:
-        returnstring = 'Pipeline \'' + pipeline + '\' removed successfully from environment \'' + env + '\'!\n(Or it wasn\'t there before)\n'
+        returnstring = 'Pipeline \'' + pipeline + '\' removed successfully from environment \'' + env + '\'!\n'
     else:
         returnstring = 'Failed to remove pipeline \'' + pipeline + '\' from environment \'' + env + '\'!\n'
 
