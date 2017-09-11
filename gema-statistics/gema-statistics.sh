@@ -2,8 +2,8 @@
 
 OPT="add"
 DATAFILE="~/datafile"
-NUM=1
-WAIT=300
+NUM=500
+WAIT=60
 
 for i in `seq 1 $NUM`; do
 
