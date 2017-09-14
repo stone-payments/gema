@@ -15,6 +15,7 @@ ENVIRONMENT=$2
 PIPELINE=$3
 
 APP_URL="https://gema.stone.com.br"
+#APP_URL="http://localhost:8888"
 
 if [ $# -eq 3 ]; then
     curl "$APP_URL/$ACTION?env=$ENVIRONMENT&pipeline=$PIPELINE"

@@ -3,7 +3,7 @@
 OPT="add"
 DATAFILE="~/datafile"
 NUM=500
-WAIT=60
+WAIT=1
 
 for i in `seq 1 $NUM`; do
 

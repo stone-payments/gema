@@ -14,17 +14,36 @@ restrictedenvsarray = restrictedenvs.split(",")
 auth = gemuser + ":" + gempass
 
 http = httplib2.Http(disable_ssl_certificate_validation=True)
-request_headers = {
-    "Accept": "Accept: application/vnd.go.cd.v2+json",
-    "Content-Type": "application/json",
-    "Authorization": "Basic " + base64.encodestring(auth).replace('\n', '')
-}
+
+cookie = ""
+###### request_headers = {'Cookie': response['set-cookie']}
 
 @app.route('/')
 def wrongRoute():
     return "GEMA\n"
 
+def authenticate():
+    request_headers_aut = {
+        "Accept": "Accept: application/vnd.go.cd.v1+json",
+        "Content-Type": "application/json",
+        "Authorization": "Basic " + base64.encodestring(auth).replace('\n', '')
+    }
+    global cookie
+    if not cookie :
+        gocd_url = os.environ['GOCD_URL'] + "/go/api/version"
+        resp, content = http.request(gocd_url, headers=request_headers_aut)
+        parsed_json = json.loads(content)
+        cookie = resp['set-cookie']    
+        return cookie
+    return cookie
+
 def envExists (env):
+
+    request_headers = {
+        "Accept": "Accept: application/vnd.go.cd.v2+json",
+        "Content-Type": "application/json",
+        'Cookie': authenticate()
+    }
 
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments"
     resp, content = http.request(gocd_url, headers=request_headers)
@@ -42,7 +61,7 @@ def pipeExists (pipeline):
     request_headers_pipe = {
         "Accept": "Accept: application/vnd.go.cd.v4+json",
         "Content-Type": "application/json",
-        "Authorization": "Basic " + base64.encodestring(auth).replace('\n', '')
+        'Cookie': authenticate()
     }
 
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/pipelines/" + pipeline
@@ -63,12 +82,20 @@ def list():
     pipeline = request.args.get('pipeline')
     env = request.args.get('env')
 
+   # return envExists(env)
+
     if not envExists(env):
         return 'Environment \'' + env + '\' NOT found!\n'
 
     if not pipeExists(pipeline):
         return 'Pipeline \'' + pipeline + '\' NOT found!\n'
 
+    request_headers = {
+        "Accept": "Accept: application/vnd.go.cd.v2+json",
+        "Content-Type": "application/json",
+        'Cookie': authenticate()
+    }
+    
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
     resp, content = http.request(gocd_url, headers=request_headers)
     parsed_json = json.loads(content)
@@ -104,6 +131,12 @@ def add():
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
 
     data = "{\"pipelines\":{\"add\":[\"" + pipeline + "\"]}}"
+
+    request_headers = {
+        "Accept": "Accept: application/vnd.go.cd.v2+json",
+        "Content-Type": "application/json",
+        'Cookie': authenticate()
+    }
 
     resp, content = http.request(gocd_url, "PATCH", data, headers=request_headers)
     parsed_json = json.loads(content)
@@ -141,6 +174,13 @@ def remove():
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
 
     data = "{\"pipelines\":{\"remove\":[\"" + pipeline + "\"]}}"
+
+    request_headers = {
+        "Accept": "Accept: application/vnd.go.cd.v2+json",
+        "Content-Type": "application/json",
+        'Cookie': authenticate()
+    }
+
     resp, content = http.request(gocd_url, "PATCH", data, headers=request_headers)
     parsed_json = json.loads(content)
 
