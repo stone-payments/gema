@@ -3,6 +3,7 @@ import base64
 import ssl
 import json
 import os
+from datetime import datetime
 from flask import Flask, request
 
 app = Flask(__name__)
@@ -28,14 +29,27 @@ def authenticate():
         "Content-Type": "application/json",
         "Authorization": "Basic " + base64.encodestring(auth).replace('\n', '')
     }
+
     global cookie
-    if not cookie :
+    if not checkCookieValidate() :
         gocd_url = os.environ['GOCD_URL'] + "/go/api/version"
         resp, content = http.request(gocd_url, headers=request_headers_aut)
         parsed_json = json.loads(content)
-        cookie = resp['set-cookie']    
-        return cookie
+        cookie = resp['set-cookie']
     return cookie
+
+def checkCookieValidate():
+    
+    if  cookie :
+        strCookie = cookie.split(';')
+        strDateCookie = strCookie[2].split(',') 
+        dateCookie = datetime.strptime(strDateCookie[1], " %d-%b-%Y %H:%M:%S %Z") 
+        currentDate =datetime.now()
+        #print dateCookie 
+        #print currentDate
+        if currentDate < dateCookie :
+            return True
+    return False
 
 def envExists (env):
 
@@ -82,8 +96,6 @@ def list():
     pipeline = request.args.get('pipeline')
     env = request.args.get('env')
 
-   # return envExists(env)
-
     if not envExists(env):
         return 'Environment \'' + env + '\' NOT found!\n'
 
@@ -95,7 +107,7 @@ def list():
         "Content-Type": "application/json",
         'Cookie': authenticate()
     }
-    
+
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
     resp, content = http.request(gocd_url, headers=request_headers)
     parsed_json = json.loads(content)
