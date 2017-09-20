@@ -17,11 +17,17 @@ auth = gemuser + ":" + gempass
 http = httplib2.Http(disable_ssl_certificate_validation=True)
 
 cookie = ""
-###### request_headers = {'Cookie': response['set-cookie']}
 
 @app.route('/')
 def wrongRoute():
     return "GEMA\n"
+
+def is_json(myjson):
+    try:
+        json_object = json.loads(myjson)
+    except ValueError, e:
+        return False
+    return True
 
 def authenticate():
     request_headers_aut = {
@@ -34,6 +40,8 @@ def authenticate():
     if not checkCookieValidate() :
         gocd_url = os.environ['GOCD_URL'] + "/go/api/version"
         resp, content = http.request(gocd_url, headers=request_headers_aut)
+        if not is_json(content):
+            return None
         parsed_json = json.loads(content)
         cookie = resp['set-cookie']
     return cookie
@@ -52,11 +60,15 @@ def checkCookieValidate():
     return False
 
 def envExists (env):
+    
+    authGocd = authenticate()
+    if authGocd is None:
+        return "GoCD is overwhelmed. Please try again!\n"
 
     request_headers = {
         "Accept": "Accept: application/vnd.go.cd.v2+json",
         "Content-Type": "application/json",
-        'Cookie': authenticate()
+        'Cookie': authGocd
     }
 
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments"
@@ -72,10 +84,14 @@ def envExists (env):
 
 def pipeExists (pipeline):
     
+    authGocd = authenticate()
+    if authGocd is None:
+        return "GoCD is overwhelmed. Please try again!\n"
+    
     request_headers_pipe = {
         "Accept": "Accept: application/vnd.go.cd.v4+json",
         "Content-Type": "application/json",
-        'Cookie': authenticate()
+        'Cookie': authGocd
     }
 
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/pipelines/" + pipeline
@@ -102,10 +118,14 @@ def list():
     if not pipeExists(pipeline):
         return 'Pipeline \'' + pipeline + '\' NOT found!\n'
 
+    authGocd = authenticate()
+    if authGocd is None:
+        return "GoCD is overwhelmed. Please try again!\n"
+
     request_headers = {
         "Accept": "Accept: application/vnd.go.cd.v2+json",
         "Content-Type": "application/json",
-        'Cookie': authenticate()
+        'Cookie': authGocd
     }
 
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
@@ -144,10 +164,14 @@ def add():
 
     data = "{\"pipelines\":{\"add\":[\"" + pipeline + "\"]}}"
 
+    authGocd = authenticate()
+    if authGocd is None:
+        return "GoCD is overwhelmed. Please try again!\n"
+
     request_headers = {
         "Accept": "Accept: application/vnd.go.cd.v2+json",
         "Content-Type": "application/json",
-        'Cookie': authenticate()
+        'Cookie': authGocd
     }
 
     resp, content = http.request(gocd_url, "PATCH", data, headers=request_headers)
@@ -187,10 +211,14 @@ def remove():
 
     data = "{\"pipelines\":{\"remove\":[\"" + pipeline + "\"]}}"
 
+    authGocd = authenticate()
+    if authGocd is None:
+        return "GoCD is overwhelmed. Please try again!\n"
+
     request_headers = {
         "Accept": "Accept: application/vnd.go.cd.v2+json",
         "Content-Type": "application/json",
-        'Cookie': authenticate()
+        'Cookie': authGocd
     }
 
     resp, content = http.request(gocd_url, "PATCH", data, headers=request_headers)
