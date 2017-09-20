@@ -3,6 +3,7 @@ import base64
 import ssl
 import json
 import os
+import stopwatch
 from datetime import datetime
 from flask import Flask, request
 
@@ -21,13 +22,25 @@ cookie = ""
 @app.route('/')
 def wrongRoute():
     return "GEMA\n"
-
 def is_json(myjson):
     try:
         json_object = json.loads(myjson)
     except ValueError, e:
         return False
     return True
+
+def sendRequest(gocd_url, method_http, data, requestHeader):
+    
+    startDate = datetime.now()
+    if method_http is None:
+        resp,content = http.request(gocd_url, headers=requestHeader)
+    else:
+        resp,content = http.request(gocd_url, method_http, data, headers=requestHeader)
+    endDate = datetime.now()
+    duration = endDate - startDate
+    print "Duration: " + duration.total_seconds()
+
+    return resp,content
 
 def authenticate():
     request_headers_aut = {
@@ -39,7 +52,8 @@ def authenticate():
     global cookie
     if not checkCookieValidate() :
         gocd_url = os.environ['GOCD_URL'] + "/go/api/version"
-        resp, content = http.request(gocd_url, headers=request_headers_aut)
+        resp,content = sendRequest(gocd_url, None, None, request_headers_aut)
+        #resp, content = http.request(gocd_url, headers=request_headers_aut)
         if not is_json(content):
             return None
         parsed_json = json.loads(content)
@@ -72,7 +86,8 @@ def envExists (env):
     }
 
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments"
-    resp, content = http.request(gocd_url, headers=request_headers)
+    resp,content = sendRequest(gocd_url, None, None, request_headers)
+    #resp, content = http.request(gocd_url, headers=request_headers)
     parsed_json = json.loads(content)
 
     contains = False
@@ -95,7 +110,8 @@ def pipeExists (pipeline):
     }
 
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/pipelines/" + pipeline
-    resp, content = http.request(gocd_url, headers=request_headers_pipe)
+    resp,content = sendRequest(gocd_url, None, None, request_headers_pipe)
+    #resp, content = http.request(gocd_url, headers=request_headers_pipe)
     parsed_json = json.loads(content)
 
     if "message" in parsed_json:
@@ -129,7 +145,8 @@ def list():
     }
 
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
-    resp, content = http.request(gocd_url, headers=request_headers)
+    resp,content = sendRequest(gocd_url, None, None, request_headers)
+    #resp, content = http.request(gocd_url, headers=request_headers)
     parsed_json = json.loads(content)
 
     returnstring = ""
@@ -174,7 +191,8 @@ def add():
         'Cookie': authGocd
     }
 
-    resp, content = http.request(gocd_url, "PATCH", data, headers=request_headers)
+    resp,content = sendRequest(gocd_url,"PATCH",data, request_headers)
+    #resp, content = http.request(gocd_url, "PATCH", data, headers=request_headers)
     parsed_json = json.loads(content)
 
     if "message" in parsed_json:
@@ -221,7 +239,8 @@ def remove():
         'Cookie': authGocd
     }
 
-    resp, content = http.request(gocd_url, "PATCH", data, headers=request_headers)
+    resp,content = sendRequest(gocd_url,"PATCH",data, request_headers)
+    #resp, content = http.request(gocd_url, "PATCH", data, headers=request_headers)
     parsed_json = json.loads(content)
 
     if "message" in parsed_json:
