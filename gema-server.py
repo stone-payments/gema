@@ -38,7 +38,6 @@ def sendRequest(gocd_url, method_http, data, requestHeader):
         resp,content = http.request(gocd_url, method_http, data, headers=requestHeader)
     endDate = datetime.now()
     duration = endDate - startDate
-    print "Duration: " + duration.total_seconds()
 
     return resp,content
 
