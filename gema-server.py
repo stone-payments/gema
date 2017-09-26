@@ -3,7 +3,6 @@ import base64
 import ssl
 import json
 import os
-import stopwatch
 from datetime import datetime
 from flask import Flask, request
 
@@ -22,6 +21,7 @@ cookie = ""
 @app.route('/')
 def wrongRoute():
     return "GEMA\n"
+
 def is_json(myjson):
     try:
         json_object = json.loads(myjson)
