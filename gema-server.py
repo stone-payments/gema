@@ -3,7 +3,8 @@ import base64
 import ssl
 import json
 import os
-from datetime import datetime
+import datetime
+import pytz
 from flask import Flask, request
 
 app = Flask(__name__)
@@ -29,15 +30,75 @@ def is_json(myjson):
         return False
     return True
 
-def sendRequest(gocd_url, method_http, data, requestHeader):
+def cerberusLog (endpoint, action, env, pipeline, duration):
+
+    print "Sending logs to cerberus..."
+
+    now = datetime.datetime.now().utcnow().replace(tzinfo=pytz.utc)
+    dateNow = str(now.year) +"-"+ str (now.strftime('%02m')) +"-"+ str(now.day)
+    hourNow = str(now.strftime('%02H')) +":"+ str(now.strftime('%02M')) +":"+ str(now.strftime('%02S')) +"."+ str(now.microsecond) + "+00:00"
+    timestampCerberus = dateNow + "T" + hourNow
+
+    #print now
+    #print timestampCerberus
+
+    cerberusDev = "http://dev-logger.stone.com.br:8733/v1/log"
+    method_http = "POST"
+
+    data = '''[
+    {
+        \"AdditionalData\" : 
+        {
+             \"Action\" : \"'''+ str(action) +'''\",
+             \"Environment\" : \"''' + str(env) + '''",
+             \"Pipeline\" : \"'''+ str(pipeline) +'''",
+             \"Duration\" : '''+ str(duration) +''',
+             \"ID\" : \"500\"
+        },
+        \"ApplicationId\" : "",
+        \"MachineName\" : \"Gema",
+        \"ManagedThreadId\" : "",
+        \"ManagedThreadName\" : null,
+        \"Message\" : \"Logs from GEMA",
+        \"NativeProcessId\" : \"0",
+        \"NativeThreadId\" : \"0",
+        \"OSFullName\" : \"Linux",
+        \"ProcessName\" : \"Gema",
+        \"ProcessPath\" : "/",
+        \"ProductCompany\" : \"Buy4",
+        \"ProductName\" : \"GEMA",
+        \"ProductVersion\" : \"1.0",
+        \"Severity\" : \"Info",
+        \"Tags\" : [],
+        \"Timestamp\" : \"'''+ timestampCerberus +'''",
+        \"TypeName\" : \"Gema\"
+    }
+    ]'''
+
+    request_headers = {
+        "Content-Type": "application/json",
+    }
+
+    print "Enviando dados:"
+    print data
+
+    resp,content = http.request(cerberusDev, method_http, data, headers=request_headers)
+    print "Logs sent to cerberus!\n"
+    print content
+
+    return "good"
+
+def sendRequest(gocd_url, action, method_http, data, requestHeader, env, pipeline):
     
-    startDate = datetime.now()
+    startDate = datetime.datetime.now()
     if method_http is None:
         resp,content = http.request(gocd_url, headers=requestHeader)
     else:
         resp,content = http.request(gocd_url, method_http, data, headers=requestHeader)
-    endDate = datetime.now()
+    endDate = datetime.datetime.now()
     duration = endDate - startDate
+
+    cerberusLog (gocd_url, action, env, pipeline, duration.total_seconds())
 
     return resp,content
 
@@ -51,7 +112,7 @@ def authenticate():
     global cookie
     if not checkCookieValidate() :
         gocd_url = os.environ['GOCD_URL'] + "/go/api/version"
-        resp,content = sendRequest(gocd_url, None, None, request_headers_aut)
+        resp,content = sendRequest(gocd_url, "auth", None, None, request_headers_aut, None, None)
         #resp, content = http.request(gocd_url, headers=request_headers_aut)
         if not is_json(content):
             return None
@@ -64,8 +125,8 @@ def checkCookieValidate():
     if  cookie :
         strCookie = cookie.split(';')
         strDateCookie = strCookie[2].split(',') 
-        dateCookie = datetime.strptime(strDateCookie[1], " %d-%b-%Y %H:%M:%S %Z") 
-        currentDate =datetime.now()
+        dateCookie = datetime.datetime.strptime(strDateCookie[1], " %d-%b-%Y %H:%M:%S %Z") 
+        currentDate =datetime.datetime.now()
         #print dateCookie 
         #print currentDate
         if currentDate < dateCookie :
@@ -85,8 +146,10 @@ def envExists (env):
     }
 
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments"
-    resp,content = sendRequest(gocd_url, None, None, request_headers)
+    resp,content = sendRequest(gocd_url, "EnvDiscovery", None, None, request_headers, env, None)
     #resp, content = http.request(gocd_url, headers=request_headers)
+    if not is_json(content):
+        return "GoCD is overwhelmed. Please try again!\n"
     parsed_json = json.loads(content)
 
     contains = False
@@ -109,8 +172,11 @@ def pipeExists (pipeline):
     }
 
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/pipelines/" + pipeline
-    resp,content = sendRequest(gocd_url, None, None, request_headers_pipe)
+    resp,content = sendRequest(gocd_url, "PipelineDiscovery", None, None, request_headers_pipe, None, pipeline)
     #resp, content = http.request(gocd_url, headers=request_headers_pipe)
+
+    if not is_json(content):
+        return "GoCD is overwhelmed. Please try again!\n"
     parsed_json = json.loads(content)
 
     if "message" in parsed_json:
@@ -144,8 +210,11 @@ def list():
     }
 
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
-    resp,content = sendRequest(gocd_url, None, None, request_headers)
+    resp,content = sendRequest(gocd_url, "list", None, None, request_headers, env, pipeline)
     #resp, content = http.request(gocd_url, headers=request_headers)
+
+    if not is_json(content):
+        return "GoCD is overwhelmed. Please try again!\n"
     parsed_json = json.loads(content)
 
     returnstring = ""
@@ -190,8 +259,11 @@ def add():
         'Cookie': authGocd
     }
 
-    resp,content = sendRequest(gocd_url,"PATCH",data, request_headers)
+    resp,content = sendRequest(gocd_url, "add", "PATCH", data, request_headers, env, pipeline)
     #resp, content = http.request(gocd_url, "PATCH", data, headers=request_headers)
+
+    if not is_json(content):
+        return "GoCD is overwhelmed. Please try again!\n"
     parsed_json = json.loads(content)
 
     if "message" in parsed_json:
@@ -238,8 +310,11 @@ def remove():
         'Cookie': authGocd
     }
 
-    resp,content = sendRequest(gocd_url,"PATCH",data, request_headers)
+    resp,content = sendRequest(gocd_url, "remove", "PATCH", data, request_headers, env, pipeline)
     #resp, content = http.request(gocd_url, "PATCH", data, headers=request_headers)
+
+    if not is_json(content):
+        return "GoCD is overwhelmed. Please try again!\n"
     parsed_json = json.loads(content)
 
     if "message" in parsed_json:
