@@ -43,6 +43,10 @@ GEMA_PASS:
 RESTRICTED_ENVS:
 	- A list of restricted environments separeted by ",". These are environents where the user cannot add or remove pipelines to, for exemple, Production.
 
+CERBERUS: The endpoint of cerberus:
+	- Production: http://lgcb.buy4sc.local:8733/v1/log
+	- Dev: http://dev-logger.stone.com.br:8733/v1/log
+
 When these environment URLs have been defined, just start the app with:
 ```
 	# python gema.py

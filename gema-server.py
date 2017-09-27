@@ -44,7 +44,10 @@ def cerberusLog (endpoint, action, env, pipeline, duration):
     #print now
     #print timestampCerberus
 
-    cerberusDev = "http://dev-logger.stone.com.br:8733/v1/log"
+    #cerberusDev = "http://dev-logger.stone.com.br:8733/v1/log"
+    #cerberusProd = "http://lgcb.buy4sc.local:8733/v1/log"
+    
+    cerberusEndpoint = os.environ['CERBERUS']
     method_http = "POST"
 
     data = '''[
@@ -84,7 +87,7 @@ def cerberusLog (endpoint, action, env, pipeline, duration):
     print "Sending logs to cerberus:"
     print data
 
-    resp,content = http.request(cerberusDev, method_http, data, headers=request_headers)
+    resp,content = http.request(cerberusEndpoint, method_http, data, headers=request_headers)
     
     print "\nCerberus response:"
     print content
