@@ -103,7 +103,7 @@ def sendRequest(gocd_url, action, method_http, data, requestHeader, env, pipelin
 
     cerberusLog (gocd_url, action, env, pipeline, duration.total_seconds())
 
-    print "Cookie: "+cookie
+    #print "Cookie: "+cookie
     #print "content: "+content
 
     return resp,content
@@ -279,7 +279,7 @@ def add():
 
     if "message" in parsed_json:
         if "Failed to update environment" in parsed_json["message"]:
-            if "Duplicate unique value" in parsed_json["message"]:
+            if "Duplicate unique value" in parsed_json["message"] or "which is already part" in parsed_json["message"]:
                 return 'Pipeline \'' + pipeline + '\' is already in another environment!\n'
             else:
                 return 'Pipeline \'' + pipeline + '\' is already in environment \'' + env +'\'!\n'
