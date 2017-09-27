@@ -24,6 +24,10 @@ def wrongRoute():
     return "GEMA\n"
 
 def is_json(myjson):
+    
+    if "html" in myjson:
+        return False
+
     try:
         json_object = json.loads(myjson)
     except ValueError, e:
@@ -31,8 +35,6 @@ def is_json(myjson):
     return True
 
 def cerberusLog (endpoint, action, env, pipeline, duration):
-
-    print "Sending logs to cerberus..."
 
     now = datetime.datetime.now().utcnow().replace(tzinfo=pytz.utc)
     dateNow = str(now.year) +"-"+ str (now.strftime('%02m')) +"-"+ str(now.day)
@@ -79,11 +81,12 @@ def cerberusLog (endpoint, action, env, pipeline, duration):
         "Content-Type": "application/json",
     }
 
-    print "Enviando dados:"
+    print "Sending logs to cerberus:"
     print data
 
     resp,content = http.request(cerberusDev, method_http, data, headers=request_headers)
-    print "Logs sent to cerberus!\n"
+    
+    print "\nCerberus response:"
     print content
 
     return "good"
@@ -99,6 +102,9 @@ def sendRequest(gocd_url, action, method_http, data, requestHeader, env, pipelin
     duration = endDate - startDate
 
     cerberusLog (gocd_url, action, env, pipeline, duration.total_seconds())
+
+    print "Cookie: "+cookie
+    #print "content: "+content
 
     return resp,content
 
@@ -190,6 +196,8 @@ def pipeExists (pipeline):
 # List environments of pipeline
 @app.route('/list')
 def list():
+    global cookie
+    cookie = ""
     pipeline = request.args.get('pipeline')
     env = request.args.get('env')
 
@@ -212,6 +220,7 @@ def list():
     gocd_url = os.environ['GOCD_URL'] + "/go/api/admin/environments/" + env
     resp,content = sendRequest(gocd_url, "list", None, None, request_headers, env, pipeline)
     #resp, content = http.request(gocd_url, headers=request_headers)
+    #cookie = ""
 
     if not is_json(content):
         return "GoCD is overwhelmed. Please try again!\n"
@@ -232,6 +241,8 @@ def list():
 # Update environments of pipeline
 @app.route('/add')
 def add():
+    global cookie
+    cookie = ""
     pipeline = request.args.get('pipeline')
     env = request.args.get('env')
 
@@ -287,6 +298,9 @@ def add():
 
 @app.route('/remove')
 def remove():
+    global cookie
+    cookie = ""
+
     pipeline = request.args.get('pipeline')
     env = request.args.get('env')
 
