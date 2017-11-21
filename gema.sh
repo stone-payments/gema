@@ -14,7 +14,7 @@ ACTION=$1
 ENVIRONMENT=$2
 PIPELINE=$3
 
-APP_URL="https://gema.stone.com.br"
+APP_URL="https://gema.stone.com.br:3443"
 #APP_URL="http://localhost:8888"
 
 if [ $# -eq 3 ]; then
